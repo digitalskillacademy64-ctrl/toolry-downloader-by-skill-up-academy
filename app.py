@@ -1,16 +1,15 @@
 import streamlit as st
 import yt_dlp
 import os
-import re
 
 # Page Configuration
 st.set_page_config(page_title="Toolry Downloader", page_icon="🚀", layout="wide")
 
-# Custom CSS for Styling
+# Custom CSS
 st.markdown("""
     <style>
     .main { background-color: #f0f2f6; }
-    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #FF4B4B; color: white; }
+    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #FF4B4B; color: white; font-weight: bold; }
     .stTextInput>div>div>input { border-radius: 5px; }
     </style>
     """, unsafe_allow_html=True)
@@ -19,18 +18,17 @@ st.title("🚀 TOOLRY DOWNLOADER")
 st.markdown("### BY SKILL UP ACADEMY | CEO SHAHID MAHMOOD CHEEMA")
 st.write("WhatsApp: 00447704578383")
 
-# Initialize Session State for URL
+# URL Input Handling
 if 'url_input' not in st.session_state:
     st.session_state.url_input = ""
 
 def clear_text():
     st.session_state.url_input = ""
 
-# Layout Columns
 col1, col2 = st.columns([4, 1])
 
 with col1:
-    url = st.text_input("Paste YouTube Link (Supports Playlists):", key="url_input", placeholder="https://www.youtube.com/watch?v=...")
+    url = st.text_input("Paste YouTube Link (Playlists Supported):", key="url_input", placeholder="https://www.youtube.com/watch?v=...")
 
 with col2:
     st.write("##") # Spacing
@@ -39,17 +37,18 @@ with col2:
 if url:
     if st.button("DOWNLOAD"):
         try:
-            with st.spinner("Processing... Please wait."):
+            with st.spinner("📥 Downloading the best quality... Please wait."):
                 save_path = "downloaded_video.mp4"
                 
-                # Playlist Friendly Settings
+                # Optimized ydl_opts for Playlists and High Quality
                 ydl_opts = {
-                    'format': 'best',
+                    'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                     'outtmpl': save_path,
                     'cookiefile': 'cookies.txt',
-                    'noplaylist': False,  # پلے لسٹ سپورٹ آن کر دی گئی ہے
-                    'playlist_items': '1', # پلے لسٹ میں سے صرف مطلوبہ ویڈیو لے گا
+                    'noplaylist': False,
+                    'playlist_items': '1',
                     'nocheckcertificate': True,
+                    'merge_output_format': 'mp4',
                     'quiet': True,
                     'no_warnings': True,
                 }
@@ -60,6 +59,7 @@ if url:
                 # Provide Download Link
                 if os.path.exists(save_path):
                     with open(save_path, "rb") as file:
+                        st.success("✅ Download Ready!")
                         st.video(file)
                         st.download_button(
                             label="📥 CLICK HERE TO SAVE TO DEVICE",
@@ -67,10 +67,13 @@ if url:
                             file_name="Toolry_Video.mp4",
                             mime="video/mp4"
                         )
-                    os.remove(save_path) # Cleanup
+                    os.remove(save_path) # Cleanup server space
                 else:
-                    st.error("Error: Video file not found.")
+                    st.error("Error: Could not process the video.")
 
         except Exception as e:
             st.error(f"Error: {str(e)}")
-            st.info("فائل صحیح طرح اپ لوڈ ہونی چاہیے۔ اگر ایرر برقرار ہے تو cookies.txt چیک کریں۔")
+            st.info("مشورہ: اگر ایرر برقرار ہے تو چیک کریں کہ GitHub پر 'packages.txt' فائل میں 'ffmpeg' لکھا ہوا ہے اور وہ اسی ریپوزٹری میں موجود ہے۔")
+
+st.markdown("---")
+st.caption("© 2026 Skill Up Digital Academy | Sadiqabad, Pakistan")
