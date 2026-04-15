@@ -1,109 +1,112 @@
 import streamlit as st
 import yt_dlp
 import os
-import re
 
-# --- Page Config ---
-st.set_page_config(page_title="Toolry Downloader", layout="wide")
+# صفحے کی بنیادی سیٹنگز
+st.set_page_config(page_title="Toolry Downloader", page_icon="📥", layout="wide")
 
+# کسٹم ڈیزائن (CSS)
 st.markdown("""
     <style>
-    .stApp { background-color: #f8f9fa; }
-    .header-box {
-        background: #1e3799; color: white; padding: 25px;
-        text-align: center; border-radius: 12px;
-    }
-    .brand-sub {
-        text-align: center; font-weight: bold; margin: 15px 0;
-        color: #1e3799; border-bottom: 2px solid #1e3799; padding-bottom: 10px;
-        font-size: 1.2em;
-    }
-    .done-text {
-        color: #2ecc71; font-size: 60px; font-weight: bold;
-        text-align: center; margin-top: 30px;
+    .main {
+        background-color: #f8f9fa;
     }
     .stButton>button {
-        background-color: #1e3799; color: white; border-radius: 8px;
-        height: 3.5em; width: 100%; font-weight: bold;
+        width: 100%;
+        border-radius: 8px;
+        height: 3em;
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+    .header-box {
+        background-color: #1e3d59;
+        padding: 20px;
+        border-radius: 10px;
+        color: white;
+        text-align: center;
+        margin-bottom: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-DOWNLOAD_PATH = os.path.join(os.getcwd(), "downloads")
+# ہیڈر اور برانڈنگ
+st.markdown(f"""
+    <div class="header-box">
+        <h1>BY SKILL UP ACADEMY | CEO SHAHID MAHMOOD CHEEMA</h1>
+        <p>WhatsApp: 00447704578383</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# --- Branding ---
-st.markdown('<div class="header-box"><h1>🚀 TOOLRY DOWNLOADER</h1></div>', unsafe_allow_html=True)
-st.markdown('<div class="brand-sub">BY SKILL UP ACADEMY | CEO SHAHID MAHMOOD CHEEMA | WhatsApp: 00447704578383</div>', unsafe_allow_html=True)
+st.title("📥 Toolry All-in-One Video Downloader")
 
-url = st.text_input("🔗 Paste YouTube Link:", placeholder="Paste link and it will only download the single video...")
+# لنک ڈالنے کی جگہ
+url = st.text_input("یوٹیوب یا کسی بھی ویڈیو کا لنک یہاں پیسٹ کریں:", placeholder="https://www.youtube.com/watch?v=...")
 
+# بٹن لے آؤٹ
 col1, col2, col3, col4 = st.columns(4)
-with col1: download_btn = st.button("📥 DOWNLOAD")
-with col2: resume_btn = st.button("🔄 RESUME")
-with col3: 
-    if st.button("📂 FOLDER"):
-        if not os.path.exists(DOWNLOAD_PATH): os.makedirs(DOWNLOAD_PATH)
-        os.startfile(DOWNLOAD_PATH)
-with col4:
-    if st.button("🧹 RESET"): 
-        st.cache_data.clear()
-        st.rerun()
 
-st.write("---")
-
-p_bar = st.progress(0)
-status_msg = st.empty()
-final_done = st.empty()
-
-def clean_ansi(text): return re.sub(r'\x1b\[[0-9;]*[mGKF]', '', str(text))
-
-def progress_hook(d):
-    if d['status'] == 'downloading':
-        percent = clean_ansi(d.get('_percent_str', '0%')).replace('%','').strip()
-        speed = clean_ansi(d.get('_speed_str', 'Fast...'))
-        total = clean_ansi(d.get('_total_bytes_str', d.get('_total_bytes_estimate_str', '...')))
-        
-        try:
-            p_val = float(percent)
-            p_bar.progress(p_val / 100)
-            status_msg.markdown(f"### 📥 Downloading: `{percent}%` | ⚡ Speed: `{speed}` | 📦 Size: `{total}`")
-        except: pass
-        
-    if d['status'] == 'finished':
-        p_bar.progress(1.0)
-        status_msg.empty()
-        final_done.markdown('<p class="done-text">✅ DONE</p>', unsafe_allow_html=True)
-
-def start_download():
-    if not url:
-        st.error("Link paste kren!")
-        return
-    
-    final_done.empty()
-    status_msg.info("⚡ Processing Single Video Connection...")
-    
+if url:
     try:
-        if not os.path.exists(DOWNLOAD_PATH): os.makedirs(DOWNLOAD_PATH)
-        
-        ydl_opts = {
-            'format': 'best',
-            'outtmpl': f'{DOWNLOAD_PATH}/%(title)s.%(ext)s',
-            'progress_hooks': [progress_hook],
-            'continuedl': True,
-            'noprogress': True,
+        # ویڈیو کی معلومات حاصل کرنا
+        ydl_opts_info = {
             'quiet': True,
-            # اہم ترین تبدیلی: پلے لسٹ کو روکنے کے لیے
-            'noplaylist': True, 
-            'concurrent_fragment_downloads': 64,
-            'youtube_include_dash_manifest': False,
-            'cachedir': False,
+            'no_warnings': True,
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
         
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-            
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+        with yt_dlp.YoutubeDL(ydl_opts_info) as ydl:
+            info = ydl.extract_info(url, download=False)
+            video_title = info.get('title', 'video')
+            thumbnail = info.get('thumbnail')
 
-if download_btn or resume_btn:
-    start_download()
+        if thumbnail:
+            st.image(thumbnail, width=400)
+        st.write(f"**ویڈیو کا عنوان:** {video_title}")
+
+        with col1:
+            if st.button("DOWNLOAD"):
+                with st.spinner("پروسیسنگ شروع ہے..."):
+                    save_path = "downloaded_video.mp4"
+                    
+                    # مین ڈاؤن لوڈ سیٹنگز (403 ایرر سے بچنے کے لیے)
+                    ydl_opts = {
+                        'format': 'best',
+                        'outtmpl': save_path,
+                        'quiet': True,
+                        'no_warnings': True,
+                        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                        'referer': 'https://www.google.com/',
+                    }
+
+                    try:
+                        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                            ydl.download([url])
+
+                        if os.path.exists(save_path):
+                            with open(save_path, "rb") as f:
+                                st.download_button(
+                                    label="فائل سیو کریں (Save File)",
+                                    data=f,
+                                    file_name=f"{video_title}.mp4",
+                                    mime="video/mp4"
+                                )
+                            st.success("ڈاؤن لوڈنگ مکمل! اب اوپر والے بٹن سے سیو کریں۔")
+                            os.remove(save_path) # سرور سے فائل صاف کرنا
+                    except Exception as download_error:
+                        st.error(f"ڈاؤن لوڈ میں مسئلہ آیا: {download_error}")
+
+    except Exception as e:
+        st.error(f"لنک پروسیس نہیں ہو سکا: {e}")
+
+# باقی بٹن (ڈیزائن کے لیے)
+with col2:
+    st.button("RESUME")
+with col3:
+    st.button("FOLDER")
+with col4:
+    if st.button("RESET"):
+        st.rerun()
+
+st.markdown("---")
+st.caption("© 2026 Skill Up by Kar e Kamal | Powered by Shahid Mahmood Cheema")
